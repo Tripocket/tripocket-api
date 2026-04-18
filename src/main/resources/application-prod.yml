@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tripocket-db
+    username: tripocket-user
+    password: ${tripocket_DB_PASSWORD}
+
+keycloak:
+  admin:
+    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
