@@ -7,4 +7,6 @@ import pl.tripocket.tripocket_api.auth.user.model.User;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
   Optional<User> findByEmail(String email);
+
+    Optional<User> findByUsername(String username);
 }
