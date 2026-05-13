@@ -1,9 +1,22 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/tripocket-db
+    url: jdbc:postgresql://postgres:5432/tripocket-db
     username: tripocket-user
-    password: ${tripocket_DB_PASSWORD}
+    password: ${TRIPOCKET_DB_PASSWORD}
+  data:
+    redis:
+      host: redis
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://keycloak:8080/auth/realms/tripocket/protocol/openid-connect/certs
+
+server:
+  servlet:
+    context-path: /api
 
 keycloak:
   admin:
+    server-url: http://keycloak:8080/auth
     client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET}

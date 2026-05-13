@@ -42,13 +42,30 @@ services:
     depends_on:
       - postgres
 
+  api:
+    image: ghcr.io/mat-dut/tripocket-api:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      TRIPOCKET_DB_PASSWORD: ${TRIPOCKET_DB_PASSWORD}
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
+    depends_on:
+      - postgres
+      - redis
+      - keycloak
+
   nginx:
     image: nginx:alpine
-    network_mode: host
+    ports:
+      - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - keycloak
+      - api
 
 volumes:
   postgres_data:
