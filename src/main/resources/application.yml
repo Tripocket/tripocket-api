@@ -25,3 +25,7 @@ keycloak:
     server-url: http://localhost/auth
     realm: tripocket
     client-id: tripocket-api-admin
+
+server:
+  servlet:
+    context-path: /api
