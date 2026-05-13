@@ -26,9 +26,18 @@ public class TripParticipant {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private TripRole role; // Ujednolicone do OWNER/PARTICIPANT
 
     @Builder.Default
     @Column(name = "joined_at")
     private Instant joinedAt = Instant.now();
+
+    // Punkt 2.4: Automatyczne ustawianie klucza złożonego przed zapisem
+    @PrePersist
+    public void ensureId() {
+        if (id == null && trip != null && user != null) {
+            this.id = new TripParticipantId(trip.getId(), user.getId());
+        }
+    }
 }

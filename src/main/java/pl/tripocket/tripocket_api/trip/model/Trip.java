@@ -3,8 +3,11 @@ package pl.tripocket.tripocket_api.trip.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.UuidGenerator;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,22 +16,30 @@ import java.util.UUID;
 @Getter @Setter
 public class Trip {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue
+    @UuidGenerator
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id; // Zmienione z Long na UUID
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_trip_id")
+    private Trip parentTrip;
+
+    private String name;
     private String country;
     private LocalDate startDate;
     private LocalDate endDate;
     private BigDecimal budget;
+    private String baseCurrency;
+    private String transportMode;
+    private String tripType;
 
-    //mapowanie do es kiu el
+    @Enumerated(EnumType.STRING) // Zmienione ze String na Enum
+    private TripStatus status;
 
-    @Column(name = "currency_primary")
-    private String currencyPrimary;
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL)
+    private List<TripParticipant> participants = new ArrayList<>();
 
-    @Column(name = "currency_secondary")
-    private String currencySecondary;
-
-    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TripParticipant> participants = new java.util.ArrayList<>();
+    @OneToMany(mappedBy = "parentTrip")
+    private List<Trip> subTrips = new ArrayList<>();
 }

@@ -10,8 +10,11 @@ import pl.tripocket.tripocket_api.trip.model.TripParticipant;
 @Mapper(componentModel = "spring")
 public interface TripMapper {
 
+    @Mapping(target = "parentTripId", source = "parentTrip.id")
+    @Mapping(target = "subTrips", source = "subTrips")
     TripResponse toResponse(Trip trip);
 
+    @Mapping(target = "id", source = "user.id")
     @Mapping(target = "username", source = "user.username")
     @Mapping(target = "displayName", source = "user.displayName")
     ParticipantResponse toParticipantResponse(TripParticipant participant);

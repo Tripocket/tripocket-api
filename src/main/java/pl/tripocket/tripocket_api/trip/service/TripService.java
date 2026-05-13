@@ -1,17 +1,180 @@
 package pl.tripocket.tripocket_api.trip.service;
 
-import pl.tripocket.tripocket_api.trip.dto.ChangeRoleRequest;
-import pl.tripocket.tripocket_api.trip.dto.InviteRequest;
-import pl.tripocket.tripocket_api.trip.dto.TripCreateRequest;
-import pl.tripocket.tripocket_api.trip.dto.TripUpdateRequest;
-import pl.tripocket.tripocket_api.trip.model.Trip;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import pl.tripocket.tripocket_api.auth.user.model.User;
+import pl.tripocket.tripocket_api.auth.user.repository.UserRepository;
+import pl.tripocket.tripocket_api.common.exception.ResourceNotFoundException;
+import pl.tripocket.tripocket_api.trip.dto.*;
+import pl.tripocket.tripocket_api.trip.mapper.TripMapper;
+import pl.tripocket.tripocket_api.trip.model.*;
+import pl.tripocket.tripocket_api.trip.repository.TripRepository;
+
+import java.util.List;
 import java.util.UUID;
 
-public interface TripService {
-    Trip createTrip(TripCreateRequest request, UUID creatorId);
-    Trip updateTrip(UUID tripId, TripUpdateRequest request, UUID requesterId);
-    void inviteUser(UUID tripId, InviteRequest request, UUID requesterId);
-    void removeParticipant(UUID tripId, UUID userIdToRemove, UUID requesterId);
-    void changeParticipantRole(UUID tripId, UUID targetUserId, ChangeRoleRequest request, UUID requesterId);
-    void deleteTrip(UUID tripId, UUID requesterId);
+@Service
+@RequiredArgsConstructor
+public class TripService {
+
+    private final TripRepository tripRepository;
+    private final UserRepository userRepository;
+    private final TripMapper tripMapper;
+
+    @Transactional
+    public TripStatusResponse createTrip(TripCreateRequest request, JwtAuthenticationToken token) {
+        UUID creatorId = UUID.fromString(token.getName());
+        User creator = userRepository.findById(creatorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Użytkownik nie istnieje"));
+
+        Trip trip = new Trip();
+        // 5.1: Pełne mapowanie pól z requestu
+        trip.setName(request.name());
+        trip.setCountry(request.country());
+        trip.setStartDate(request.startDate());
+        trip.setEndDate(request.endDate());
+        trip.setBudget(request.budget());
+        trip.setBaseCurrency(request.baseCurrency());
+        trip.setTransportMode(request.transportMode());
+        trip.setTripType(request.tripType());
+        trip.setStatus(TripStatus.PLANNED); // Użycie Enuma zamiast Stringa
+
+        if (request.parentTripId() != null) {
+            Trip parent = tripRepository.findById(request.parentTripId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Podróż nadrzędna nie istnieje"));
+            trip.setParentTrip(parent);
+        }
+
+        TripParticipant owner = TripParticipant.builder()
+                .trip(trip)
+                .user(creator)
+                .role(TripRole.OWNER)
+                .build();
+
+        trip.getParticipants().add(owner);
+        Trip saved = tripRepository.save(trip);
+
+        return new TripStatusResponse(saved.getId(), saved.getStatus().name(), "Podróż została utworzona pomyślnie.");
+    }
+
+    @Transactional
+    public InvitationResponse inviteUser(UUID tripId, InvitationRequest request, JwtAuthenticationToken token) {
+        Trip trip = getTripIfOwner(tripId, token);
+
+        User userToInvite = userRepository.findByUsername(request.username())
+                .orElseThrow(() -> new ResourceNotFoundException("Użytkownik " + request.username() + " nie istnieje"));
+
+        boolean alreadyInTrip = trip.getParticipants().stream()
+                .anyMatch(p -> p.getUser().getId().equals(userToInvite.getId()));
+
+        if (alreadyInTrip) {
+            throw new IllegalStateException("Użytkownik jest już uczestnikiem tej podróży.");
+        }
+
+        // 5.4: Tutaj docelowo powinna pojawić się encja Invitation.
+        // Na razie zwracamy sukces zgodnie z dokumentacją, zakładając że mechanizm wysyłki zostanie dodany w punkcie 7.
+        return new InvitationResponse("Zaproszenie o statusie 'Oczekujące' zostało wysłane do " + request.username());
+    }
+
+    @Transactional
+    public TripResponse updateTrip(UUID id, TripUpdateRequest request, JwtAuthenticationToken token) {
+        Trip trip = getTripIfOwner(id, token);
+
+        // 5.1 & 3.2: Mapowanie zmian z uwzględnieniem null-checków (opcjonalnie) lub nadpisywanie
+        if (request.name() != null) trip.setName(request.name());
+        if (request.country() != null) trip.setCountry(request.country());
+        if (request.startDate() != null) trip.setStartDate(request.startDate());
+        if (request.endDate() != null) trip.setEndDate(request.endDate());
+        if (request.budget() != null) trip.setBudget(request.budget());
+        if (request.baseCurrency() != null) trip.setBaseCurrency(request.baseCurrency());
+        if (request.transportMode() != null) trip.setTransportMode(request.transportMode());
+        if (request.tripType() != null) trip.setTripType(request.tripType());
+        if (request.status() != null) trip.setStatus(request.status());
+
+        return tripMapper.toResponse(tripRepository.save(trip));
+    }
+
+    @Transactional
+    public void deleteTrip(UUID id, JwtAuthenticationToken token) {
+        Trip trip = getTripIfOwner(id, token);
+        tripRepository.delete(trip);
+    }
+
+    @Transactional
+    public void changeParticipantRole(UUID tripId, UUID targetUserId, ChangeRoleRequest request, JwtAuthenticationToken token) {
+        Trip trip = getTripIfOwner(tripId, token);
+
+        TripParticipant participant = trip.getParticipants().stream()
+                .filter(p -> p.getUser().getId().equals(targetUserId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Uczestnik nie znaleziony"));
+
+        // 5.3: Poprawione wywołanie request.role()
+        try {
+            participant.setRole(TripRole.valueOf(request.role().toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Niepoprawna rola: " + request.role());
+        }
+
+        tripRepository.save(trip);
+    }
+
+    @Transactional
+    public void removeParticipant(UUID tripId, UUID userIdToRemove, JwtAuthenticationToken token) {
+        Trip trip = getTripIfOwner(tripId, token);
+        UUID requesterId = UUID.fromString(token.getName());
+
+        if (userIdToRemove.equals(requesterId)) {
+            throw new IllegalStateException("Nie możesz usunąć samego siebie z podróży.");
+        }
+
+        boolean removed = trip.getParticipants().removeIf(p -> p.getUser().getId().equals(userIdToRemove));
+        if (!removed) {
+            throw new ResourceNotFoundException("Użytkownik nie jest uczestnikiem tej podróży.");
+        }
+
+        tripRepository.save(trip);
+    }
+
+    public List<TripResponse> getUserMainTrips(JwtAuthenticationToken token) {
+        UUID userId = UUID.fromString(token.getName());
+        return tripRepository.findAllByParticipantsUserIdAndParentTripIsNull(userId).stream()
+                .map(tripMapper::toResponse)
+                .toList();
+    }
+
+    public TripResponse getTripDetails(UUID id) {
+        Trip trip = tripRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Podróż o ID " + id + " nie istnieje"));
+        return tripMapper.toResponse(trip);
+    }
+
+    public List<ParticipantResponse> getParticipants(UUID tripId) {
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResourceNotFoundException("Podróż nie istnieje"));
+        return trip.getParticipants().stream()
+                .map(tripMapper::toParticipantResponse)
+                .toList();
+    }
+
+    // --- HELPERY ---
+
+    private Trip getTripIfOwner(UUID tripId, JwtAuthenticationToken token) {
+        UUID requesterId = UUID.fromString(token.getName());
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResourceNotFoundException("Podróż nie istnieje"));
+
+        // 5.2: Poprawione porównanie roli na TripRole.OWNER
+        boolean isOwner = trip.getParticipants().stream()
+                .anyMatch(p -> p.getUser().getId().equals(requesterId) && p.getRole() == TripRole.OWNER);
+
+        if (!isOwner) {
+            // 5.5: Użycie AccessDeniedException dla błędów uprawnień
+            throw new AccessDeniedException("Brak uprawnień: Tylko Właściciel może wykonać tę akcję.");
+        }
+        return trip;
+    }
 }

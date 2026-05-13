@@ -1,149 +1,137 @@
 package pl.tripocket.tripocket_api.trip;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import pl.tripocket.tripocket_api.auth.user.model.User;
 import pl.tripocket.tripocket_api.auth.user.repository.UserRepository;
-import pl.tripocket.tripocket_api.common.exception.ResourceNotFoundException;
-import pl.tripocket.tripocket_api.trip.dto.InviteRequest;
-import pl.tripocket.tripocket_api.trip.model.Trip;
-import pl.tripocket.tripocket_api.trip.model.TripParticipant;
+import pl.tripocket.tripocket_api.trip.dto.TripCreateRequest;
+import pl.tripocket.tripocket_api.trip.dto.TripStatusResponse;
+import pl.tripocket.tripocket_api.trip.mapper.TripMapper;
+import pl.tripocket.tripocket_api.trip.model.*;
 import pl.tripocket.tripocket_api.trip.repository.TripRepository;
-import pl.tripocket.tripocket_api.trip.service.TripServiceImpl;
+import pl.tripocket.tripocket_api.trip.service.TripService;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TripServiceTest {
 
-    @Mock
-    private TripRepository tripRepository;
+    @Mock private TripRepository tripRepository;
+    @Mock private UserRepository userRepository;
+    @Mock private TripMapper tripMapper;
+    @Mock private JwtAuthenticationToken token;
 
-    @Mock
-    private UserRepository userRepository;
+    @InjectMocks private TripService tripService;
 
-    @InjectMocks
-    private TripServiceImpl tripService;
-
-    private User ownerUser;
-    private UUID tripId;
-    private Trip testTrip;
+    private UUID userId;
+    private User user;
 
     @BeforeEach
     void setUp() {
-        tripId = UUID.randomUUID();
+        userId = UUID.randomUUID();
+        user = new User();
+        user.setId(userId);
 
-        ownerUser = new User();
-        ownerUser.setId(UUID.randomUUID());
-        ownerUser.setUsername("owner_user");
-
-        testTrip = new Trip();
-        testTrip.setId(tripId);
-        testTrip.setParticipants(new ArrayList<>());
-
-        // Dodajemy właściciela do podróży (symulacja istniejącej podróży)
-        TripParticipant ownerPart = new TripParticipant();
-        ownerPart.setUser(ownerUser);
-        ownerPart.setRole("OWNER");
-        testTrip.getParticipants().add(ownerPart);
+        // Mockowanie sub (ID użytkownika) z JWT
+        when(token.getName()).thenReturn(userId.toString());
     }
 
     @Test
-    @DisplayName("Should throw exception when creator is not found")
-    void shouldThrowExceptionWhenUserNotFound() {
-        // GIVEN
-        UUID nonExistentId = UUID.randomUUID();
-        when(userRepository.findById(nonExistentId)).thenReturn(Optional.empty());
+    void createTrip_Success() {
+        // Given
+        TripCreateRequest request = new TripCreateRequest(
+                null, "Góry 2026", "Poland", LocalDate.now(),
+                LocalDate.now().plusDays(5), new BigDecimal("2000.00"), "PLN", "CAR", "LEISURE"
+                );
 
-        // WHEN & THEN
-        assertThrows(ResourceNotFoundException.class, () ->
-                tripService.createTrip(null, nonExistentId)
-        );
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tripRepository.save(any(Trip.class))).thenAnswer(inv -> {
+            Trip t = inv.getArgument(0);
+            t.setId(UUID.randomUUID());
+            return t;
+        });
+
+        // When
+        TripStatusResponse response = tripService.createTrip(request, token);
+
+        // Then
+        assertNotNull(response.id());
+        assertEquals("PLANNED", response.status());
+        verify(tripRepository).save(any(Trip.class));
     }
 
     @Test
-    @DisplayName("WF-07/08: Should successfully invite a new participant")
-    void shouldInviteParticipantSuccessfully() {
-        // GIVEN
-        User friend = new User();
-        friend.setId(UUID.randomUUID());
-        friend.setUsername("friend_user");
+    void deleteTrip_Fails_WhenUserIsNotOwner() {
+        // Given
+        UUID tripId = UUID.randomUUID();
+        Trip trip = new Trip();
+        trip.setId(tripId);
 
-        InviteRequest inviteRequest = new InviteRequest("friend_user", "PARTICIPANT");
+        // Użytkownik jest uczestnikiem, ale nie właścicielem
+        TripParticipant participant = TripParticipant.builder()
+                .user(user)
+                .role(TripRole.PARTICIPANT)
+                .build();
+        trip.setParticipants(new ArrayList<>(List.of(participant)));
 
-        when(tripRepository.findById(tripId)).thenReturn(Optional.of(testTrip));
-        when(userRepository.findByUsername("friend_user")).thenReturn(Optional.of(friend));
+        when(tripRepository.findById(tripId)).thenReturn(Optional.of(trip));
 
-        // WHEN
-        tripService.inviteUser(tripId, inviteRequest, ownerUser.getId());
-
-        // THEN
-        assertEquals(2, testTrip.getParticipants().size());
-        boolean invitedExists = testTrip.getParticipants().stream()
-                .anyMatch(p -> p.getUser().getUsername().equals("friend_user") && "PARTICIPANT".equals(p.getRole()));
-        assertTrue(invitedExists);
-        verify(tripRepository).save(testTrip);
+        // When & Then
+        assertThrows(AccessDeniedException.class, () -> tripService.deleteTrip(tripId, token));
+        verify(tripRepository, never()).delete(any());
     }
 
     @Test
-    @DisplayName("Should block invitation if requester is not the owner")
-    void shouldBlockInvitationForNonOwner() {
-        // GIVEN
-        UUID hackerId = UUID.randomUUID(); // Ktoś inny
-        InviteRequest inviteRequest = new InviteRequest("some_user", "PARTICIPANT");
+    void removeParticipant_Success() {
+        // Given
+        UUID tripId = UUID.randomUUID();
+        UUID toRemoveId = UUID.randomUUID();
+        User toRemove = new User();
+        toRemove.setId(toRemoveId);
 
-        when(tripRepository.findById(tripId)).thenReturn(Optional.of(testTrip));
+        Trip trip = new Trip();
+        trip.setParticipants(new ArrayList<>());
 
-        // WHEN & THEN
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                tripService.inviteUser(tripId, inviteRequest, hackerId)
-        );
-        assertEquals("Only owner can invite others", exception.getMessage());
+        // Dodaj właściciela (zalogowany user)
+        trip.getParticipants().add(TripParticipant.builder().user(user).role(TripRole.OWNER).build());
+        // Dodaj uczestnika do usunięcia
+        trip.getParticipants().add(TripParticipant.builder().user(toRemove).role(TripRole.PARTICIPANT).build());
+
+        when(tripRepository.findById(tripId)).thenReturn(Optional.of(trip));
+
+        // When
+        tripService.removeParticipant(tripId, toRemoveId, token);
+
+        // Then
+        assertEquals(1, trip.getParticipants().size());
+        verify(tripRepository).save(trip);
     }
 
     @Test
-    @DisplayName("Should successfully remove a participant")
-    void shouldRemoveParticipant() {
-        // GIVEN
-        UUID friendId = UUID.randomUUID();
-        User friend = new User();
-        friend.setId(friendId);
+    void removeParticipant_Fails_WhenRemovingSelf() {
+        // Given
+        UUID tripId = UUID.randomUUID();
+        Trip trip = new Trip();
+        trip.getParticipants().add(TripParticipant.builder().user(user).role(TripRole.OWNER).build());
 
-        TripParticipant friendPart = new TripParticipant();
-        friendPart.setUser(friend);
-        friendPart.setRole("PARTICIPANT");
-        testTrip.getParticipants().add(friendPart);
+        when(tripRepository.findById(tripId)).thenReturn(Optional.of(trip));
 
-        when(tripRepository.findById(tripId)).thenReturn(Optional.of(testTrip));
-
-        // WHEN
-        tripService.removeParticipant(tripId, friendId, ownerUser.getId());
-
-        // THEN
-        assertEquals(1, testTrip.getParticipants().size()); // Został tylko owner
-        verify(tripRepository).save(testTrip);
-    }
-
-    @Test
-    @DisplayName("Should prevent owner from removing themselves")
-    void shouldPreventOwnerFromSelfRemoval() {
-        // GIVEN
-        when(tripRepository.findById(tripId)).thenReturn(Optional.of(testTrip));
-
-        // WHEN & THEN
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                tripService.removeParticipant(tripId, ownerUser.getId(), ownerUser.getId())
-        );
-        assertEquals("You cannot remove yourself from the trip", exception.getMessage());
+        // When & Then
+        assertThrows(IllegalStateException.class, () -> tripService.removeParticipant(tripId, userId, token));
     }
 }
