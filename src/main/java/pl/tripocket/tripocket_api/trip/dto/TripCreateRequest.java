@@ -4,18 +4,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
 public record TripCreateRequest(
-        @JsonProperty("parent_trip_id") UUID parentTripId,
-        @NotBlank @JsonProperty("name") String name,
-        @NotBlank @JsonProperty("country") String country,
-        @NotNull @JsonProperty("start_date") LocalDate startDate,
-        @NotNull @JsonProperty("end_date") LocalDate endDate,
+        @JsonProperty("parentTripId") UUID parentTripId,
+        @NotBlank @Size(min=4, max=255) @JsonProperty("name") String name,
+        @NotBlank @Size(min=4, max=127) @JsonProperty("country") String country,
+        @NotNull @JsonProperty("startDate") LocalDate startDate,
+        @NotNull @JsonProperty("endDate") LocalDate endDate,
         @NotNull @Positive @JsonProperty("budget") BigDecimal budget,
-        @NotBlank @JsonProperty("base_currency") String baseCurrency,
-        @JsonProperty("transport_mode") String transportMode,
-        @JsonProperty("trip_type") String tripType
+        @NotBlank @Size(min=3, max=3) @JsonProperty("baseCurrency") String baseCurrency,
+        @JsonProperty("transportMode") String transportMode,
+        @JsonProperty("tripType") String tripType
 ) {}

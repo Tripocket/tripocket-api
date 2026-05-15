@@ -1,6 +1,6 @@
-DROP TABLE IF EXISTS trip_participants;
-DROP TABLE IF EXISTS invitations;
-DROP TABLE IF EXISTS trips;
+--DROP TABLE IF EXISTS trip_participants;
+--DROP TABLE IF EXISTS invitations;
+--DROP TABLE IF EXISTS trips;
 
 CREATE TABLE trips (
     id UUID PRIMARY KEY,
@@ -13,21 +13,23 @@ CREATE TABLE trips (
     base_currency VARCHAR(3) NOT NULL,
     transport_mode VARCHAR(64),
     trip_type VARCHAR(64),
-    status VARCHAR(32) NOT NULL
+    status VARCHAR(32) DEFAULT 'PLANNED' NOT NULL
 );
 
 CREATE TABLE invitations (
     id UUID PRIMARY KEY,
-    trip_id UUID REFERENCES trips(id),
-    user_id UUID REFERENCES users(id),
-    role INTEGER NOT NULL,
-    status VARCHAR(32) DEFAULT 'PENDING'
+    trip_id UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+    inviter_id UUID NOT NULL REFERENCES users(id),
+    invitee_id UUID NOT NULL REFERENCES users(id),
+    role VARCHAR(32) DEFAULT 'PARTICIPANT' NOT NULL,
+    status VARCHAR(32) DEFAULT 'PENDING' NOT NULL,
+    created_at TIMESTAMP DEFAULT now() NOT NULL
 );
 
 CREATE TABLE trip_participants (
     trip_id UUID NOT NULL,
     user_id UUID NOT NULL,
-    role INTEGER NOT NULL,
+    role VARCHAR(32) DEFAULT 'PARTICIPANT' NOT NULL,
     joined_at TIMESTAMP DEFAULT now() NOT NULL,
     CONSTRAINT trip_participants_pk PRIMARY KEY (trip_id, user_id),
     CONSTRAINT trip_participants_trips_fk FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE,

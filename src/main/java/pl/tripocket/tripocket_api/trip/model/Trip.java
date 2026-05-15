@@ -3,6 +3,8 @@ package pl.tripocket.tripocket_api.trip.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
@@ -19,10 +21,11 @@ public class Trip {
     @GeneratedValue
     @UuidGenerator
     @Column(name = "id", updatable = false, nullable = false)
-    private UUID id; // Zmienione z Long na UUID
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_trip_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Trip parentTrip;
 
     private String name;
@@ -37,9 +40,9 @@ public class Trip {
     @Enumerated(EnumType.STRING) // Zmienione ze String na Enum
     private TripStatus status;
 
-    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TripParticipant> participants = new ArrayList<>();
 
-    @OneToMany(mappedBy = "parentTrip")
+    @OneToMany(mappedBy = "parentTrip", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Trip> subTrips = new ArrayList<>();
 }

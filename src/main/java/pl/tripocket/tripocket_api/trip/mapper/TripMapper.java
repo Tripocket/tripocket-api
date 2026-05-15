@@ -17,5 +17,7 @@ public interface TripMapper {
     @Mapping(target = "id", source = "user.id")
     @Mapping(target = "username", source = "user.username")
     @Mapping(target = "displayName", source = "user.displayName")
+    @Mapping(target = "role", expression = "java(participant.getRole().name())")
+    @Mapping(target = "email", source = "user.email")
     ParticipantResponse toParticipantResponse(TripParticipant participant);
 }

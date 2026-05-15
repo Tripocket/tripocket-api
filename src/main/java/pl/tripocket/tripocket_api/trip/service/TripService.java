@@ -13,6 +13,7 @@ import pl.tripocket.tripocket_api.trip.mapper.TripMapper;
 import pl.tripocket.tripocket_api.trip.model.*;
 import pl.tripocket.tripocket_api.trip.repository.TripRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,6 +31,10 @@ public class TripService {
         User creator = userRepository.findById(creatorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Użytkownik nie istnieje"));
 
+        if (request.endDate().isBefore(request.startDate())) {
+            throw new IllegalArgumentException("Data zakończenia nie może być wcześniejsza od rozpoczęcia");
+        }
+
         Trip trip = new Trip();
         // 5.1: Pełne mapowanie pól z requestu
         trip.setName(request.name());
@@ -42,11 +47,20 @@ public class TripService {
         trip.setTripType(request.tripType());
         trip.setStatus(TripStatus.PLANNED); // Użycie Enuma zamiast Stringa
 
+        /*
+        if (trip.getId().equals(request.parentTripId())) {
+            throw new IllegalArgumentException("Wycieczka nie może być swoją własną podwycieczką!");
+        }
+         */
+
+
         if (request.parentTripId() != null) {
-            Trip parent = tripRepository.findById(request.parentTripId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Podróż nadrzędna nie istnieje"));
+            Trip parent = getTripIfOwner(request.parentTripId(), token);
             trip.setParentTrip(parent);
         }
+
+
+        Trip saved = tripRepository.save(trip);
 
         TripParticipant owner = TripParticipant.builder()
                 .trip(trip)
@@ -54,36 +68,24 @@ public class TripService {
                 .role(TripRole.OWNER)
                 .build();
 
-        trip.getParticipants().add(owner);
-        Trip saved = tripRepository.save(trip);
+        saved.getParticipants().add(owner);
+
+        tripRepository.save(saved);
 
         return new TripStatusResponse(saved.getId(), saved.getStatus().name(), "Podróż została utworzona pomyślnie.");
-    }
-
-    @Transactional
-    public InvitationResponse inviteUser(UUID tripId, InvitationRequest request, JwtAuthenticationToken token) {
-        Trip trip = getTripIfOwner(tripId, token);
-
-        User userToInvite = userRepository.findByUsername(request.username())
-                .orElseThrow(() -> new ResourceNotFoundException("Użytkownik " + request.username() + " nie istnieje"));
-
-        boolean alreadyInTrip = trip.getParticipants().stream()
-                .anyMatch(p -> p.getUser().getId().equals(userToInvite.getId()));
-
-        if (alreadyInTrip) {
-            throw new IllegalStateException("Użytkownik jest już uczestnikiem tej podróży.");
-        }
-
-        // 5.4: Tutaj docelowo powinna pojawić się encja Invitation.
-        // Na razie zwracamy sukces zgodnie z dokumentacją, zakładając że mechanizm wysyłki zostanie dodany w punkcie 7.
-        return new InvitationResponse("Zaproszenie o statusie 'Oczekujące' zostało wysłane do " + request.username());
     }
 
     @Transactional
     public TripResponse updateTrip(UUID id, TripUpdateRequest request, JwtAuthenticationToken token) {
         Trip trip = getTripIfOwner(id, token);
 
-        // 5.1 & 3.2: Mapowanie zmian z uwzględnieniem null-checków (opcjonalnie) lub nadpisywanie
+        LocalDate start = request.startDate() == null ? trip.getStartDate() : request.startDate();
+        LocalDate end = request.endDate() == null ? trip.getEndDate() : request.endDate();
+        if (end.isBefore(start)) {
+            throw new IllegalArgumentException("Data zakończenia nie może być wcześniejsza od rozpoczęcia");
+        }
+
+        // Mapowanie zmian z uwzględnieniem null-checków (opcjonalnie) lub nadpisywanie
         if (request.name() != null) trip.setName(request.name());
         if (request.country() != null) trip.setCountry(request.country());
         if (request.startDate() != null) trip.setStartDate(request.startDate());
@@ -112,7 +114,7 @@ public class TripService {
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Uczestnik nie znaleziony"));
 
-        // 5.3: Poprawione wywołanie request.role()
+        // Poprawione wywołanie request.role()
         try {
             participant.setRole(TripRole.valueOf(request.role().toUpperCase()));
         } catch (IllegalArgumentException e) {
@@ -167,12 +169,12 @@ public class TripService {
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new ResourceNotFoundException("Podróż nie istnieje"));
 
-        // 5.2: Poprawione porównanie roli na TripRole.OWNER
+        // Poprawione porównanie roli na TripRole.OWNER
         boolean isOwner = trip.getParticipants().stream()
                 .anyMatch(p -> p.getUser().getId().equals(requesterId) && p.getRole() == TripRole.OWNER);
 
         if (!isOwner) {
-            // 5.5: Użycie AccessDeniedException dla błędów uprawnień
+            // Użycie AccessDeniedException dla błędów uprawnień
             throw new AccessDeniedException("Brak uprawnień: Tylko Właściciel może wykonać tę akcję.");
         }
         return trip;

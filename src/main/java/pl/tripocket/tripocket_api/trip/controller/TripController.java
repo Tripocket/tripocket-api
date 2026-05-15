@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/trips")
+@RequestMapping("/trips")
 @RequiredArgsConstructor
 public class TripController {
 
@@ -51,18 +51,6 @@ public class TripController {
         tripService.deleteTrip(id, token);
         return ResponseEntity.noContent().build();
     }
-
-    // --- ZARZĄDZANIE UCZESTNIKAMI ---
-
-    /*
-    @PostMapping("/{tripId}/invitations")
-    public ResponseEntity<InvitationResponse> inviteUser(
-            @PathVariable UUID tripId,
-            @RequestBody @Valid InvitationRequest request,
-            JwtAuthenticationToken token) {
-        return ResponseEntity.ok(tripService.inviteUser(tripId, request, token));
-    }
-     */
 
     @GetMapping("/{tripId}/participants")
     public ResponseEntity<List<ParticipantResponse>> getParticipants(@PathVariable UUID tripId) {

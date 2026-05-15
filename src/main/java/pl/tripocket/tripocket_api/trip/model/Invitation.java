@@ -34,10 +34,15 @@ public class Invitation {
     private User invitee;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    @Builder.Default
+    private TripRole role = TripRole.PARTICIPANT;
+
+    @Enumerated(EnumType.STRING)
     @Builder.Default
     private InvitationStatus status = InvitationStatus.PENDING;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();
 }
