@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: tripocket-api
+  profiles:
+    active: dev
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:                                                                                                                                                                                                                                                               
+            jwk-set-uri: http://localhost/auth/realms/tripocket/protocol/openid-connect/certs
+
+keycloak:
+  client-id: tripocket
+  admin:
+    server-url: http://localhost/auth
+    realm: tripocket
+    client-id: tripocket-api-admin

@@ -13,11 +13,11 @@ spring:
     oauth2:
       resourceserver:
         jwt:                                                                                                                                                                                                                                                               
-            jwk-set-uri: http://localhost/auth/realms/tripocket/protocol/openid-connect/certs
+            jwk-set-uri: http://127.0.0.1:9090/auth/realms/tripocket/protocol/openid-connect/certs
 
 keycloak:
   client-id: tripocket
   admin:
-    server-url: http://localhost/auth
+    server-url: http://127.0.0.1:9090/auth
     realm: tripocket
     client-id: tripocket-api-admin
