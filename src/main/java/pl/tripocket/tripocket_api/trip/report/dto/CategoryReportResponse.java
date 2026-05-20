@@ -6,12 +6,12 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+@JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
 public record CategoryReportResponse(
     UUID tripId,
     String baseCurrency,
     List<CategoryEntry> categories) {
 
-  @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+  @JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
   public record CategoryEntry(String category, BigDecimal total) {}
 }

@@ -6,13 +6,13 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+@JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
 public record SettlementReportResponse(
     UUID tripId,
     String baseCurrency,
     List<Settlement> settlements) {
 
-  @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+  @JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
   public record Settlement(
       UUID debtorId,
       String debtorUsername,
