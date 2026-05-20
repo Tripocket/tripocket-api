@@ -25,8 +25,8 @@ import pl.tripocket.tripocket_api.trip.report.service.ReportService;
 class ReportControllerTest {
 
   private static final UUID TRIP_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
-  private static final UUID USER_A  = UUID.fromString("00000000-0000-0000-0000-000000000010");
-  private static final UUID USER_B  = UUID.fromString("00000000-0000-0000-0000-000000000020");
+  private static final UUID USER_A = UUID.fromString("00000000-0000-0000-0000-000000000010");
+  private static final UUID USER_B = UUID.fromString("00000000-0000-0000-0000-000000000020");
 
   @Mock ReportService reportService;
 
@@ -40,11 +40,12 @@ class ReportControllerTest {
   @Test
   void getCategories_returns200WithBody() throws Exception {
     when(reportService.getCategoryReport(TRIP_ID))
-        .thenReturn(new CategoryReportResponse(
-            TRIP_ID, "PLN",
-            List.of(new CategoryEntry("food", new BigDecimal("320.00")))));
+        .thenReturn(
+            new CategoryReportResponse(
+                TRIP_ID, "PLN", List.of(new CategoryEntry("food", new BigDecimal("320.00")))));
 
-    mockMvc.perform(get("/trips/{tripId}/reports/categories", TRIP_ID))
+    mockMvc
+        .perform(get("/trips/{tripId}/reports/categories", TRIP_ID))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.baseCurrency").value("PLN"))
         .andExpect(jsonPath("$.categories[0].category").value("food"))
@@ -54,11 +55,14 @@ class ReportControllerTest {
   @Test
   void getSettlements_returns200WithBody() throws Exception {
     when(reportService.getSettlementReport(TRIP_ID))
-        .thenReturn(new SettlementReportResponse(
-            TRIP_ID, "PLN",
-            List.of(new Settlement(USER_A, "alice", USER_B, "bob", new BigDecimal("100.00")))));
+        .thenReturn(
+            new SettlementReportResponse(
+                TRIP_ID,
+                "PLN",
+                List.of(new Settlement(USER_A, "alice", USER_B, "bob", new BigDecimal("100.00")))));
 
-    mockMvc.perform(get("/trips/{tripId}/reports/settlements", TRIP_ID))
+    mockMvc
+        .perform(get("/trips/{tripId}/reports/settlements", TRIP_ID))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.baseCurrency").value("PLN"))
         .andExpect(jsonPath("$.settlements[0].debtorUsername").value("alice"))

@@ -10,16 +10,18 @@ import pl.tripocket.tripocket_api.trip.model.Expense;
 
 public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
 
-  @Query("""
-      SELECT e.category as category, SUM(e.amount) as total 
-      FROM Expense e 
-      WHERE e.trip.id = :tripId 
-      GROUP BY e.category 
+  @Query(
+      """
+      SELECT e.category as category, SUM(e.amount) as total
+      FROM Expense e
+      WHERE e.trip.id = :tripId
+      GROUP BY e.category
   """)
   List<CategoryTotal> findCategoryTotalsByTripId(@Param("tripId") UUID tripId);
 
   interface CategoryTotal {
     String getCategory();
+
     BigDecimal getTotal();
   }
 }

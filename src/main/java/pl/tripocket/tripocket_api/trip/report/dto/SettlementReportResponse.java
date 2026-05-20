@@ -8,9 +8,7 @@ import java.util.UUID;
 
 @JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
 public record SettlementReportResponse(
-    UUID tripId,
-    String baseCurrency,
-    List<Settlement> settlements) {
+    UUID tripId, String baseCurrency, List<Settlement> settlements) {
 
   @JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy.class)
   public record Settlement(

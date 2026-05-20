@@ -29,8 +29,8 @@ class ReportServiceTest {
 
   // Fixed UUIDs so UUID ordering in netting is predictable: USER_A < USER_B
   private static final UUID TRIP_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
-  private static final UUID USER_A  = UUID.fromString("00000000-0000-0000-0000-000000000010");
-  private static final UUID USER_B  = UUID.fromString("00000000-0000-0000-0000-000000000020");
+  private static final UUID USER_A = UUID.fromString("00000000-0000-0000-0000-000000000010");
+  private static final UUID USER_B = UUID.fromString("00000000-0000-0000-0000-000000000020");
 
   @Mock TripRepository tripRepository;
   @Mock ExpenseRepository expenseRepository;
@@ -61,8 +61,7 @@ class ReportServiceTest {
   void getCategoryReport_nullCategory() {
     givenTripExists();
     CategoryTotal nullCat = categoryTotal(null, "50.00");
-    when(expenseRepository.findCategoryTotalsByTripId(TRIP_ID))
-        .thenReturn(List.of(nullCat));
+    when(expenseRepository.findCategoryTotalsByTripId(TRIP_ID)).thenReturn(List.of(nullCat));
 
     CategoryReportResponse response = reportService.getCategoryReport(TRIP_ID);
 
@@ -83,8 +82,7 @@ class ReportServiceTest {
   void getSettlementReport_simpleDebt_returnsCorrectSettlement() {
     givenTripExists();
     DebtEntry simple = debtEntry(USER_A, "alice", USER_B, "bob", "100.00");
-    when(expenseSplitRepository.findGrossDebtsByTripId(TRIP_ID))
-        .thenReturn(List.of(simple));
+    when(expenseSplitRepository.findGrossDebtsByTripId(TRIP_ID)).thenReturn(List.of(simple));
 
     SettlementReportResponse response = reportService.getSettlementReport(TRIP_ID);
 
@@ -158,9 +156,12 @@ class ReportServiceTest {
     return mock;
   }
 
-  private DebtEntry debtEntry(UUID debtorId, String debtorUsername,
-                              UUID creditorId, String creditorUsername,
-                              String amount) {
+  private DebtEntry debtEntry(
+      UUID debtorId,
+      String debtorUsername,
+      UUID creditorId,
+      String creditorUsername,
+      String amount) {
     DebtEntry mock = mock(DebtEntry.class);
     when(mock.getDebtorId()).thenReturn(debtorId);
     when(mock.getDebtorUsername()).thenReturn(debtorUsername);

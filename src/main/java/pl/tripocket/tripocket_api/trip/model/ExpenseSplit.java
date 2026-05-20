@@ -21,8 +21,7 @@ import pl.tripocket.tripocket_api.auth.user.model.User;
 @NoArgsConstructor
 public class ExpenseSplit {
 
-  @EmbeddedId
-  private ExpenseSplitId id;
+  @EmbeddedId private ExpenseSplitId id;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @MapsId("expenseId")
