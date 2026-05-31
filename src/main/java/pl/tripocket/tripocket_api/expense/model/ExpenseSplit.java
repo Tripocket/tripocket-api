@@ -4,18 +4,20 @@ import jakarta.persistence.*;
 import lombok.*;
 import pl.tripocket.tripocket_api.auth.user.model.User;
 
+import java.math.BigDecimal;
+
 @Entity
-@Table(name = "expense_participants")
+@Table(name = "expense_splits")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExpenseParticipant {
+public class ExpenseSplit {
 
     @EmbeddedId
     @Builder.Default
-    private ExpenseParticipantId id = new ExpenseParticipantId();
+    private ExpenseSplitId id = new ExpenseSplitId();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("expenseId")
@@ -26,4 +28,11 @@ public class ExpenseParticipant {
     @MapsId("userId")
     @JoinColumn(name = "user_id")
     private User user;
+
+    /**
+     * Wyliczona kwota długu uczestnika wobec osoby, która zapłaciła za wydatek
+     * (w oryginalnej walucie wydatku).
+     */
+    @Column(name = "owed_amount", nullable = false, precision = 19, scale = 2)
+    private BigDecimal owedAmount;
 }

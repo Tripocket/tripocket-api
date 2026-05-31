@@ -1,6 +1,7 @@
 package pl.tripocket.tripocket_api.expense.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
@@ -29,7 +30,6 @@ public record ExpenseCreateRequest(
         @JsonProperty("paidByUserId")
         UUID paidByUserId,
 
-        @NotEmpty
-        @JsonProperty("participantUserIds")
-        List<UUID> participantUserIds
+        @NotEmpty @Valid
+        List<ExpenseSplitRequest> splits
 ) {}

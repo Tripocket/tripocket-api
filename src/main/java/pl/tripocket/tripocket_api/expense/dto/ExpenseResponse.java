@@ -17,6 +17,6 @@ public record ExpenseResponse(
         @JsonProperty("expenseDate") LocalDate expenseDate,
         String description,
         ExpenseParticipantResponse paidBy,
-        List<ExpenseParticipantResponse> participants,
+        List<ExpenseSplitResponse> splits,
         @JsonProperty("createdAt") Instant createdAt
 ) {}

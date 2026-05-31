@@ -12,7 +12,7 @@ import java.util.UUID;
 @EqualsAndHashCode
 @AllArgsConstructor
 @NoArgsConstructor
-public class ExpenseParticipantId implements Serializable {
+public class ExpenseSplitId implements Serializable {
     private UUID expenseId;
     private UUID userId;
 }

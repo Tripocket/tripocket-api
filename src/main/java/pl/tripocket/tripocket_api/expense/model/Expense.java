@@ -55,5 +55,5 @@ public class Expense {
     private Instant createdAt;
 
     @OneToMany(mappedBy = "expense", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ExpenseParticipant> participants = new ArrayList<>();
+    private List<ExpenseSplit> splits = new ArrayList<>();
 }
