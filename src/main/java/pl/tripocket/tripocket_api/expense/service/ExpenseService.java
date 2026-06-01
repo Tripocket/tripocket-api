@@ -122,8 +122,7 @@ public class ExpenseService {
     public void deleteExpense(UUID tripId, UUID expenseId, JwtAuthenticationToken token) {
         UUID currentUserId = UUID.fromString(token.getName());
 
-        Trip trip = tripRepository.findById(tripId)
-                .orElseThrow(() -> new ResourceNotFoundException("Podróż nie istnieje."));
+        Trip trip = getTripIfCurrentUserIsParticipant(tripId, token);
 
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Wydatek nie istnieje."));

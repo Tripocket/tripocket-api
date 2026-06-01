@@ -291,6 +291,19 @@ class ExpenseServiceTest {
     }
 
     @Test
+    void deleteExpense_Fails_WhenPayerNoLongerTripParticipant() {
+        UUID formerMemberId = UUID.randomUUID();
+        User formerMember = newUser(formerMemberId, "former");
+        stubCurrentUser(formerMemberId);
+        Expense expense = expensePaidBy(formerMember);
+        when(tripRepository.findById(tripId)).thenReturn(Optional.of(trip));
+
+        assertThrows(AccessDeniedException.class,
+                () -> expenseService.deleteExpense(tripId, expense.getId(), token));
+        verify(expenseRepository, never()).delete(any());
+    }
+
+    @Test
     void deleteExpense_Fails_WhenExpenseBelongsToAnotherTrip() {
         stubCurrentUser(ownerId);
         Trip otherTrip = new Trip();
