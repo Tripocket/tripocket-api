@@ -4,6 +4,8 @@ CREATE TABLE expenses (
     category varchar(64) NOT NULL,
     amount numeric(19,2) NOT NULL,
     currency varchar(3) NOT NULL,
+    exchange_rate numeric(19,6) NOT NULL,
+    rate_source varchar(16),
     expense_date date NOT NULL,
     description varchar(1000),
     payer_id uuid NOT NULL,
@@ -16,7 +18,10 @@ CREATE TABLE expenses (
         FOREIGN KEY (payer_id) REFERENCES users(id),
 
     CONSTRAINT expenses_amount_positive
-        CHECK (amount > 0)
+        CHECK (amount > 0),
+
+    CONSTRAINT expenses_exchange_rate_positive
+        CHECK (exchange_rate > 0)
 );
 
 CREATE TABLE expense_splits (

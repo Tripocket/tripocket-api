@@ -17,6 +17,7 @@ import pl.tripocket.tripocket_api.expense.dto.ExpenseResponse;
 import pl.tripocket.tripocket_api.expense.dto.ExpenseSplitRequest;
 import pl.tripocket.tripocket_api.expense.model.Expense;
 import pl.tripocket.tripocket_api.expense.model.ExpenseSplit;
+import pl.tripocket.tripocket_api.expense.model.RateSource;
 import pl.tripocket.tripocket_api.expense.repository.ExpenseRepository;
 import pl.tripocket.tripocket_api.expense.service.ExpenseService;
 import pl.tripocket.tripocket_api.trip.model.Trip;
@@ -83,8 +84,8 @@ class ExpenseServiceTest {
 
     private ExpenseCreateRequest request(BigDecimal amount, List<ExpenseSplitRequest> splits) {
         return new ExpenseCreateRequest(
-                "Jedzenie", amount, "EUR", LocalDate.of(2024, 7, 5),
-                "Kolacja", ownerId, splits
+                "Jedzenie", amount, "EUR", new BigDecimal("4.300000"), RateSource.MANUAL,
+                LocalDate.of(2024, 7, 5), "Kolacja", ownerId, splits
         );
     }
 
@@ -136,6 +137,28 @@ class ExpenseServiceTest {
         assertEquals(0, new BigDecimal("50.01").compareTo(splits.get(0).getOwedAmount()));
         assertEquals(0, new BigDecimal("50.00").compareTo(splits.get(1).getOwedAmount()));
         assertEquals(2, response.splits().size());
+    }
+
+    @Test
+    void createExpense_StoresFrozenExchangeRateAndSource() {
+        stubCurrentUser(ownerId);
+        when(tripRepository.findById(tripId)).thenReturn(Optional.of(trip));
+        stubUserLookups();
+        when(expenseRepository.save(any(Expense.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ExpenseCreateRequest req = request(new BigDecimal("100.00"), List.of(
+                new ExpenseSplitRequest(ownerId, null),
+                new ExpenseSplitRequest(participantId, null)
+        ));
+
+        ExpenseResponse response = expenseService.createExpense(tripId, req, token);
+
+        ArgumentCaptor<Expense> captor = ArgumentCaptor.forClass(Expense.class);
+        verify(expenseRepository).save(captor.capture());
+        assertEquals(0, new BigDecimal("4.300000").compareTo(captor.getValue().getExchangeRate()));
+        assertEquals(RateSource.MANUAL, captor.getValue().getRateSource());
+        assertEquals(0, new BigDecimal("4.300000").compareTo(response.exchangeRate()));
+        assertEquals(RateSource.MANUAL, response.rateSource());
     }
 
     @Test
@@ -198,8 +221,9 @@ class ExpenseServiceTest {
 
         UUID outsiderId = UUID.randomUUID();
         ExpenseCreateRequest req = new ExpenseCreateRequest(
-                "Jedzenie", new BigDecimal("100.00"), "EUR", LocalDate.of(2024, 7, 5),
-                "Kolacja", outsiderId, List.of(new ExpenseSplitRequest(ownerId, null))
+                "Jedzenie", new BigDecimal("100.00"), "EUR", new BigDecimal("4.300000"), RateSource.MANUAL,
+                LocalDate.of(2024, 7, 5), "Kolacja", outsiderId,
+                List.of(new ExpenseSplitRequest(ownerId, null))
         );
 
         assertThrows(IllegalArgumentException.class,

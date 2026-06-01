@@ -40,6 +40,13 @@ public class Expense {
     @Column(nullable = false, length = 3)
     private String currency;
 
+    @Column(name = "exchange_rate", nullable = false, precision = 19, scale = 6)
+    private BigDecimal exchangeRate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rate_source", length = 16)
+    private RateSource rateSource;
+
     @Column(name = "expense_date", nullable = false)
     private LocalDate expenseDate;
 

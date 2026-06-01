@@ -3,6 +3,7 @@ package pl.tripocket.tripocket_api.expense.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import pl.tripocket.tripocket_api.expense.model.RateSource;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -18,6 +19,13 @@ public record ExpenseCreateRequest(
 
         @NotBlank @Size(min = 3, max = 3)
         String currency,
+
+        @NotNull @Positive
+        @JsonProperty("exchangeRate")
+        BigDecimal exchangeRate,
+
+        @JsonProperty("rateSource")
+        RateSource rateSource,
 
         @NotNull
         @JsonProperty("expenseDate")

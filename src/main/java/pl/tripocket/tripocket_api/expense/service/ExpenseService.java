@@ -78,6 +78,8 @@ public class ExpenseService {
         expense.setCategory(request.category());
         expense.setAmount(request.amount());
         expense.setCurrency(request.currency().toUpperCase());
+        expense.setExchangeRate(request.exchangeRate());
+        expense.setRateSource(request.rateSource());
         expense.setExpenseDate(request.expenseDate());
         expense.setDescription(request.description());
         expense.setPaidBy(paidBy);
@@ -211,6 +213,8 @@ public class ExpenseService {
                 expense.getCategory(),
                 expense.getAmount(),
                 expense.getCurrency(),
+                expense.getExchangeRate(),
+                expense.getRateSource(),
                 expense.getExpenseDate(),
                 expense.getDescription(),
                 toParticipantResponse(expense.getPaidBy()),

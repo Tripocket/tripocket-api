@@ -1,6 +1,7 @@
 package pl.tripocket.tripocket_api.expense.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import pl.tripocket.tripocket_api.expense.model.RateSource;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -14,6 +15,8 @@ public record ExpenseResponse(
         String category,
         BigDecimal amount,
         String currency,
+        @JsonProperty("exchangeRate") BigDecimal exchangeRate,
+        @JsonProperty("rateSource") RateSource rateSource,
         @JsonProperty("expenseDate") LocalDate expenseDate,
         String description,
         ExpenseParticipantResponse paidBy,
