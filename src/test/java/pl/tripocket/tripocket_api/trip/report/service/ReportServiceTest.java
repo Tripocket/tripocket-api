@@ -15,13 +15,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.tripocket.tripocket_api.common.exception.ResourceNotFoundException;
-import pl.tripocket.tripocket_api.trip.model.Trip;
-import pl.tripocket.tripocket_api.trip.report.dto.CategoryReportResponse;
-import pl.tripocket.tripocket_api.trip.report.dto.SettlementReportResponse;
 import pl.tripocket.tripocket_api.expense.repository.ExpenseRepository;
 import pl.tripocket.tripocket_api.expense.repository.ExpenseRepository.CategoryTotal;
 import pl.tripocket.tripocket_api.expense.repository.ExpenseSplitRepository;
 import pl.tripocket.tripocket_api.expense.repository.ExpenseSplitRepository.DebtEntry;
+import pl.tripocket.tripocket_api.trip.model.Trip;
+import pl.tripocket.tripocket_api.trip.report.dto.CategoryReportResponse;
+import pl.tripocket.tripocket_api.trip.report.dto.SettlementReportResponse;
 import pl.tripocket.tripocket_api.trip.repository.TripRepository;
 
 @ExtendWith(MockitoExtension.class)
