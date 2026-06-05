@@ -15,9 +15,9 @@ import pl.tripocket.tripocket_api.trip.report.dto.CategoryReportResponse;
 import pl.tripocket.tripocket_api.trip.report.dto.CategoryReportResponse.CategoryEntry;
 import pl.tripocket.tripocket_api.trip.report.dto.SettlementReportResponse;
 import pl.tripocket.tripocket_api.trip.report.dto.SettlementReportResponse.Settlement;
-import pl.tripocket.tripocket_api.trip.repository.ExpenseRepository;
-import pl.tripocket.tripocket_api.trip.repository.ExpenseSplitRepository;
-import pl.tripocket.tripocket_api.trip.repository.ExpenseSplitRepository.DebtEntry;
+import pl.tripocket.tripocket_api.expense.repository.ExpenseRepository;
+import pl.tripocket.tripocket_api.expense.repository.ExpenseSplitRepository;
+import pl.tripocket.tripocket_api.expense.repository.ExpenseSplitRepository.DebtEntry;
 import pl.tripocket.tripocket_api.trip.repository.TripRepository;
 
 @Service
