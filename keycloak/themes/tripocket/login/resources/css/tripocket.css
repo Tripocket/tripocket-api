@@ -1,0 +1,357 @@
+/* Tripocket Keycloak login theme overrides */
+
+:root {
+  --tp-blue: #2563eb;
+  --tp-blue-dark: #1d4ed8;
+  --tp-bg-from: #eef3fb;
+  --tp-bg-to: #e1eaf8;
+  --tp-text: #0f172a;
+  --tp-muted: #6b7280;
+  --tp-border: #e5e7eb;
+  --tp-field: #f3f4f6;
+  --tp-card: #ffffff;
+  --tp-dark: #0b0b14;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--tp-bg-to);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--tp-text);
+}
+
+/* Layout: full-screen centered card on a soft blue gradient */
+body.login-pf,
+body.login-pf-body,
+.login-pf-page,
+#kc-container,
+#kc-container-wrapper {
+  background: linear-gradient(135deg, var(--tp-bg-from) 0%, var(--tp-bg-to) 100%) !important;
+  background-image: linear-gradient(135deg, var(--tp-bg-from) 0%, var(--tp-bg-to) 100%) !important;
+}
+
+.login-pf-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* Hide Keycloak's default header (realm name shown above the card) */
+#kc-header,
+#kc-header-wrapper {
+  display: none !important;
+}
+
+/* Card */
+.card-pf {
+  background: var(--tp-card);
+  border: 1px solid var(--tp-border);
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 25rem;
+  margin: 0 auto;
+}
+
+/* Branded plane badge above the wordmark */
+.card-pf::before {
+  content: "";
+  display: block;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto 1.25rem;
+  border-radius: 9999px;
+  background-color: var(--tp-blue);
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'><path d='M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2 1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z'/></svg>") center / 2rem 2rem no-repeat;
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'><path d='M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2 1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z'/></svg>") center / 2rem 2rem no-repeat;
+  -webkit-mask-mode: alpha;
+  mask-mode: alpha;
+}
+
+/* Brand wordmark + tagline (replaces the default "Sign in to your account") */
+.card-pf header {
+  text-align: center;
+  margin-bottom: 1.75rem;
+  border: none;
+}
+
+#kc-page-title {
+  font-size: 0;
+  line-height: 0;
+  margin: 0;
+  text-align: center;
+}
+
+#kc-page-title::before {
+  content: "Tripocket";
+  display: block;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--tp-text);
+}
+
+#kc-page-title::after {
+  content: "Track expenses, split bills, travel together";
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: 400;
+  color: var(--tp-muted);
+}
+
+.subtitle,
+.instruction {
+  color: var(--tp-muted);
+}
+
+/* Form */
+.form-group {
+  margin-bottom: 1.1rem;
+}
+
+label,
+.control-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--tp-text);
+  margin-bottom: 0.4rem;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+.form-control,
+.pf-c-form-control {
+  width: 100%;
+  height: 3rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.95rem;
+  color: var(--tp-text);
+  background: var(--tp-field);
+  border: 1px solid transparent;
+  border-radius: 0.625rem;
+  box-shadow: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+  box-sizing: border-box;
+}
+
+input::placeholder {
+  color: #9ca3af;
+}
+
+input:focus,
+.form-control:focus,
+.pf-c-form-control:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--tp-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Form options row (remember-me / forgot password) */
+#kc-form-options {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 0.9rem;
+  margin: 0.25rem 0 1.25rem;
+}
+
+#kc-form-options label {
+  margin: 0;
+  font-weight: 400;
+  color: var(--tp-muted);
+}
+
+#kc-form-options .checkbox {
+  margin-right: auto;
+}
+
+/* Forgot-password link sits at the end of the options row */
+#kc-form-options a,
+.login-pf-page a.btn-link {
+  color: var(--tp-blue);
+  font-weight: 500;
+}
+
+/* Primary submit button */
+.pf-c-button.pf-m-primary,
+.btn-primary,
+input[type="submit"].btn-primary,
+#kc-login {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 3.25rem;
+  padding: 0 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--tp-dark);
+  border: 1px solid var(--tp-dark);
+  border-radius: 0.625rem;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, transform 60ms ease;
+}
+
+.pf-c-button.pf-m-primary:hover,
+.btn-primary:hover,
+input[type="submit"].btn-primary:hover,
+#kc-login:hover {
+  background: #1f2937;
+  border-color: #1f2937;
+}
+
+.pf-c-button.pf-m-primary:active,
+.btn-primary:active,
+#kc-login:active {
+  transform: translateY(1px);
+}
+
+/* Secondary / default buttons */
+.btn-default,
+.pf-c-button.pf-m-secondary {
+  background: #fff;
+  color: var(--tp-text);
+  border: 1px solid var(--tp-border);
+  border-radius: 0.625rem;
+  height: 3rem;
+  padding: 0 1rem;
+  font-weight: 500;
+}
+
+.btn-default:hover,
+.pf-c-button.pf-m-secondary:hover {
+  background: #f9fafb;
+}
+
+/* Links */
+a,
+a:visited {
+  color: var(--tp-blue);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Social providers / "Or continue with" divider */
+#kc-social-providers {
+  margin-top: 1.5rem;
+}
+
+#kc-social-providers h2,
+#kc-social-providers h4 {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--tp-muted);
+  text-align: center;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+#kc-social-providers h2::before,
+#kc-social-providers h2::after,
+#kc-social-providers h4::before,
+#kc-social-providers h4::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--tp-border);
+}
+
+#kc-social-providers ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  padding: 0;
+  margin: 0;
+}
+
+#kc-social-providers li {
+  flex: 1 1 calc(50% - 0.3125rem);
+}
+
+#kc-social-providers a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 3rem;
+  border: 1px solid var(--tp-border);
+  border-radius: 0.625rem;
+  background: #fff;
+  color: var(--tp-text);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+#kc-social-providers a:hover {
+  background: #f9fafb;
+  text-decoration: none;
+}
+
+/* Alert / error messages */
+.alert,
+.pf-c-alert {
+  border-radius: 0.625rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  border: 1px solid var(--tp-border);
+  background: #fff;
+  margin-bottom: 1rem;
+}
+
+.alert-error,
+.pf-c-alert.pf-m-danger {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.alert-success,
+.pf-c-alert.pf-m-success {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+/* Registration link ("Don't have an account? Sign up") */
+#kc-registration,
+#kc-registration-container {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--tp-muted);
+  margin-top: 1.5rem;
+}
+
+#kc-registration a {
+  font-weight: 600;
+  color: var(--tp-blue);
+}
+
+/* Locale selector if present */
+#kc-locale {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
